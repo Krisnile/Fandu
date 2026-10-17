@@ -1,0 +1,42 @@
+import assert from 'node:assert/strict';
+import {mkdtemp,writeFile} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {once} from 'node:events';
+import {makeServer} from '../server.mjs';
+import {Sources} from '../lib/sources.mjs';
+import {entry} from '../src/model.js';
+const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
+const output=await mkdtemp(join(tmpdir(),'fandu-save-proof-')),sources=new Sources();sources.search=async()=>({state:'ok',results:[]});sources.season=async()=>({state:'ok',results:[],source:'yuc'});
+const server=makeServer({dataDir:join(output,'data'),sources});server.listen(0,'127.0.0.1');await once(server,'listening');
+const base=`http://127.0.0.1:${server.address().port}`,headers={'X-Yingjian':'1','Content-Type':'application/json'};
+const read=async()=>{const response=await fetch(base+'/api/library',{headers});assert.equal(response.status,200);return response.json();};
+let browser;
+try{
+  browser=await chromium.launch({headless:true,channel:'chrome'});const page=await browser.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
+  await page.route('**/api/source-icon?**',route=>route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"/>'}));
+  await page.goto(base);await page.waitForFunction(()=>!document.querySelector('#addWork').disabled);
+  const make=async(entries,settings)=>{const library=await read();return page.evaluate(async value=>{const {librarySavePayload}=await import('/src/library-save.js');return librarySavePayload({requestId:crypto.randomUUID(),...value});},{revision:library.revision,entries,settings:settings||library.settings});};
+  const resolve=async payload=>page.evaluate(async payload=>{
+    const {resolveLibrarySave}=await import('/src/library-save.js');
+    const api=async(path,options={})=>{const response=await fetch(path,{...options,headers:{'X-Yingjian':'1',...(options.body?{'Content-Type':'application/json'}:{})}}),result=await response.json();if(!response.ok)throw Object.assign(Error(result.error||'保存未完成'),{status:response.status,migrationPending:result.migrationPending});return result;};
+    return resolveLibrarySave(payload,{send:body=>api('/api/library/save',{method:'POST',body:JSON.stringify(body)}),confirm:id=>api('/api/library/save-status?id='+encodeURIComponent(id))});
+  },payload);
+  const scenarios=[];let sent=0;
+  await page.route('**/api/library/save',async route=>{sent++;const response=await route.fetch();assert.equal(response.status(),200);await route.abort('failed');});
+  const first=await make([entry({id:'manual:proof',title:'星海巡航',type:'anime',note:'首次修改'})]);const completed=await resolve(first);assert.equal(completed.state,'completed');assert.equal(completed.result.revision,1);assert.equal(sent,1);assert.equal((await read()).entries[0].note,'首次修改');scenarios.push('browser Web Crypto matches server proof after committed response loss');
+  await page.unroute('**/api/library/save');
+  let library=await read();const later=await fetch(base+'/api/library',{method:'PUT',headers,body:JSON.stringify({...library,entries:[],settings:{...library.settings,theme:'amber'}})});assert.equal(later.status,200);
+  const replay=await resolve(first);assert.equal(replay.state,'completed');assert.equal(replay.result.revision,1);assert.equal(replay.result.library.revision,2);assert.deepEqual(replay.result.library.entries,[]);assert.equal(replay.result.library.settings.theme,'amber');scenarios.push('replay returns latest library without restoring deleted works or old theme');
+  const second=await make([entry({id:'manual:pending',title:'边界之外',type:'movie',note:'未确认的修改'})]);
+  await page.route('**/api/library/save',async route=>{const response=await route.fetch();assert.equal(response.status(),200);await route.abort('failed');});
+  await page.route('**/api/library/save-status?**',route=>route.fulfill({status:503,contentType:'application/json',body:'{"error":"测试核对暂不可用"}'}));
+  const pending=await resolve(second);assert.equal(pending.state,'pending');assert.equal((await read()).revision,3);
+  await page.unroute('**/api/library/save');await page.unroute('**/api/library/save-status?**');library=await read();assert.equal((await fetch(base+'/api/library',{method:'PUT',headers,body:JSON.stringify({...library,entries:library.entries.map(item=>({...item,rating:5,note:'后来编辑'}))})})).status,200);
+  const resumed=await resolve(second);assert.equal(resumed.state,'completed');assert.equal(resumed.result.revision,3);assert.equal(resumed.result.library.revision,4);assert.equal(resumed.result.library.entries[0].note,'后来编辑');assert.equal(resumed.result.library.entries[0].rating,5);scenarios.push('unavailable confirmation keeps immutable intent; retry confirms without overwriting later edits');
+  const third=await make([]);await page.route('**/api/library/save',route=>route.fulfill({status:409,contentType:'application/json',body:'{"error":"测试过期版本"}'}));assert.equal((await resolve(third)).state,'rejected');await page.unroute('**/api/library/save');assert.equal((await read()).revision,4);scenarios.push('definite rejection with no receipt permits no write');
+  await page.route('**/api/library/save',async route=>{const response=await route.fetch(),result=await response.json();await route.fulfill({contentType:'application/json',body:JSON.stringify({...result,fingerprint:'0'.repeat(64)})});});
+  await page.route('**/api/library/save-status?**',async route=>{const response=await route.fetch(),result=await response.json();await route.fulfill({contentType:'application/json',body:JSON.stringify({...result,requestId:crypto.randomUUID()})});});
+  assert.equal((await resolve(third)).state,'pending');await page.unroute('**/api/library/save');await page.unroute('**/api/library/save-status?**');const fixed=await resolve(third);assert.equal(fixed.state,'completed');assert.equal(fixed.result.library.revision,5);assert.deepEqual(fixed.result.library.entries,[]);scenarios.push('mismatched hash or identity is never accepted as success; same request later confirms');
+  assert.deepEqual(errors,[]);await writeFile(join(output,'report.json'),JSON.stringify({scenarios,errors,scope:'protocol-module'},null,2));console.log(JSON.stringify({passed:true,output,scenarios,scope:'protocol-module'}));
+}finally{await browser?.close();await new Promise(resolve=>server.close(resolve));}

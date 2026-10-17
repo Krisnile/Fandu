@@ -1,0 +1,39 @@
+{
+  "name": "fandu",
+  "version": "0.3.3",
+  "private": true,
+  "type": "module",
+  "main": "desktop/main.mjs",
+  "description": "番渡 · 本地作品收藏与观看进度管理",
+  "license": "MIT",
+  "author": "Krisnile",
+  "repository": {"type": "git", "url": "git+https://github.com/Krisnile/Fandu.git"},
+  "homepage": "https://github.com/Krisnile/Fandu#readme",
+  "bugs": {"url": "https://github.com/Krisnile/Fandu/issues"},
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.mjs",
+    "dev": "node --env-file-if-exists=.env --watch server.mjs",
+    "test": "node --test",
+    "qa:library": "node scripts/library-qa.mjs",
+    "desktop": "electron .",
+    "desktop:pack": "electron-builder --dir",
+    "desktop:dist": "electron-builder",
+    "qa:desktop": "node scripts/desktop-qa.mjs"
+  },
+  "engines": {
+    "node": ">=22.9"
+  },
+  "devDependencies": {"electron": "44.7.0", "electron-builder": "26.15.3"},
+  "build": {
+    "appId": "app.fandu.desktop",
+    "productName": "番渡",
+    "icon": "build/icon.svg",
+    "asar": true,
+    "directories": {"output": "dist"},
+    "files": ["desktop/**", "server.mjs", "lib/**", "src/**", "index.html", "styles.css", "controls.css", "fandu.png", "package.json"],
+    "mac": {"category": "public.app-category.entertainment", "identity": null, "target": ["dmg", "zip"]},
+    "win": {"target": [{"target": "nsis", "arch": ["x64", "arm64"]}]},
+    "nsis": {"include": "build/installer.nsh", "oneClick": false, "allowToChangeInstallationDirectory": true, "deleteAppDataOnUninstall": false},
+    "publish": null
+  }
+}

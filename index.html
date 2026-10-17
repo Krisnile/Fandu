@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0c111b" />
+    <meta name="description" content="番渡 Fandu — 下一站，异世界。" />
+    <title>番渡 Fandu</title>
+    <link rel="icon" type="image/png" href="/fandu.png" />
+    <link rel="apple-touch-icon" href="/fandu.png" />
+    <link rel="stylesheet" href="/styles.css?v=0.3.3" />
+    <link rel="stylesheet" href="/controls.css?v=0.3.3" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="主导航">
+        <div class="brand">
+          <div class="brand-mark about-logo" aria-hidden="true"><img src="/fandu.png" alt="" /></div>
+          <div class="brand-copy about-copy"><span>Fandu</span><strong>番渡</strong><p>下一站，异世界。</p></div>
+        </div>
+        <nav class="nav-list" id="primaryNav" aria-label="收藏列表"></nav>
+        <div class="notice-slot" id="navNoticeSlot"></div>
+        <button class="profile" id="openSettings">
+          <span class="settings-icon">⚙</span>
+          <span><b>设置</b><small id="sourceStatus" hidden>本地模式</small></span>
+          <span class="pulse-dot" hidden></span>
+        </button>
+      </aside>
+
+      <main id="main" class="main-content">
+        <header class="topbar">
+          <button class="mobile-menu" id="mobileMenu" aria-label="打开导航">☰</button>
+          <span class="workspace-crumb" id="workspaceCrumb">番渡</span>
+        </header>
+
+        <div class="content-wrap">
+          <section id="entryRecovery" class="entry-recovery" aria-label="未完成记录" hidden><div class="entry-recovery-head"><span id="entryRecoveryState" role="status"></span><button type="button" id="repairEditRecovery" class="text-btn" hidden>检查编辑恢复</button><button type="button" id="repairEntryDraftRecords" class="text-btn" hidden>检查录入草稿</button><button type="button" id="refreshEntryRecovery" class="text-btn">重新读取</button></div><details id="entryRecoveryMenu"><summary id="entryRecoverySummary">继续未完成</summary><div id="entryRecoveryItems"></div></details></section>
+          <section class="section-block" id="collectionSection">
+            <div class="section-head">
+              <div class="collection-title"><h1 id="sectionTitle">收藏</h1><span id="visibleCount"></span></div>
+              <div class="view-tools">
+                <button class="text-btn" id="toggleSelection" aria-pressed="false">选择</button>
+                <details class="filter-panel" id="filters"><summary>筛选</summary><div class="filter-fields">
+                  <div class="choice-setting filter-choice"><span>类型</span><div class="choice-pills" data-choice-for="filterType" role="radiogroup" aria-label="按类型筛选"><button type="button" class="choice-pill" data-choice="all" role="radio">全部</button><button type="button" class="choice-pill" data-choice="anime" role="radio">动画</button><button type="button" class="choice-pill" data-choice="movie" role="radio">电影</button><button type="button" class="choice-pill" data-choice="tv" role="radio">剧集</button></div><select id="filterType" class="choice-native" aria-hidden="true" tabindex="-1"><option value="all">全部类型</option><option value="anime">动画</option><option value="movie">电影</option><option value="tv">剧集</option></select></div>
+                  <label>年份<select id="filterYear"><option value="">全部年份</option></select></label>
+                  <div class="choice-setting filter-choice"><span>季度</span><div class="choice-pills" data-choice-for="filterSeason" role="radiogroup" aria-label="按季度筛选"><button type="button" class="choice-pill" data-choice="" role="radio">全部</button><button type="button" class="choice-pill" data-choice="冬" role="radio">冬</button><button type="button" class="choice-pill" data-choice="春" role="radio">春</button><button type="button" class="choice-pill" data-choice="夏" role="radio">夏</button><button type="button" class="choice-pill" data-choice="秋" role="radio">秋</button></div><select id="filterSeason" class="choice-native" aria-hidden="true" tabindex="-1"><option value="">全部季度</option><option>冬</option><option>春</option><option>夏</option><option>秋</option></select></div>
+                  <label class="filter-search-field">标签<input id="filterTag" class="facet-input" type="search" maxlength="40" placeholder="筛选标签" list="filterTagOptions" autocomplete="off" /><datalist id="filterTagOptions"></datalist></label>
+                  <label class="filter-search-field">系列<input id="filterSeries" class="facet-input" type="search" maxlength="40" placeholder="筛选系列" list="filterSeriesOptions" autocomplete="off" /><datalist id="filterSeriesOptions"></datalist></label>
+                  <button class="text-btn" id="resetFilters">清除筛选</button>
+                </div></details>
+                <details class="sort-menu" id="sortMenu"><summary aria-label="排序"><span>排序</span><b id="sortLabel">首播时间</b></summary><div class="sort-options"><div class="choice-pills" data-choice-for="sortSelect" role="radiogroup" aria-label="排序方式"><button type="button" class="choice-pill" data-choice="premiere" role="radio">首播时间</button><button type="button" class="choice-pill" data-choice="title" role="radio">名称</button><button type="button" class="choice-pill" data-choice="rating" role="radio">个人评分</button><button type="button" class="choice-pill" data-choice="score" role="radio">来源评分</button><button type="button" class="choice-pill" data-choice="year" role="radio">首播年份</button></div><select id="sortSelect" class="choice-native" aria-hidden="true" tabindex="-1"><option value="premiere">首播时间</option><option value="title">名称</option><option value="rating">个人评分</option><option value="score">来源评分</option><option value="year">首播年份</option></select></div></details>
+                <div class="layout-toggle" role="group" aria-label="视图模式"><button type="button" class="text-btn" data-layout-mode="grid" aria-label="网格模式">▦</button><button type="button" class="text-btn" data-layout-mode="list" aria-label="列表模式">☷</button></div>
+              </div>
+              <button class="primary-btn collection-add" id="addWork">＋ 添加</button>
+            </div>
+            <div class="batch-toolbar" id="batchToolbar" hidden role="region" aria-label="批量整理">
+              <span id="batchCount">已选 0 部</span>
+              <button class="text-btn" id="batchSelectVisible">全选当前页</button>
+              <select id="batchListSelect" aria-label="选择目标列表"><option value="">选择目标列表</option></select>
+              <button class="primary-btn" id="batchAddList" disabled>加入列表</button>
+              <button class="text-btn" id="clearSelection">清除已选</button>
+            </div>
+            <div class="collection-overview" id="collectionOverview" hidden aria-live="polite"></div>
+            <div class="poster-grid" id="posterGrid" aria-live="polite"></div>
+            <div class="continuous-more"><button type="button" class="text-btn" id="loadMoreEntries" hidden>继续加载</button></div>
+            <nav class="pagination" id="pagination" aria-label="收藏翻页" hidden><button id="previousPage" class="text-btn">上一页</button><span id="pageInfo" aria-live="polite"></span><button id="nextPage" class="text-btn">下一页</button></nav>
+            <div class="empty-state collection-empty" id="emptyState" hidden>
+              <div class="empty-route" aria-hidden="true"><i></i><span></span><i></i><span></span><i></i></div>
+              <small id="emptyKicker">收藏起点</small>
+              <h3 id="emptyTitle">从想看的第一部开始</h3>
+              <p id="emptyDescription">搜索可自动带回封面和资料，也可以手动记录或导入已有备份。</p>
+              <div class="empty-actions" id="emptyStartActions">
+                <button type="button" class="primary-btn" id="emptySearch">搜索作品</button>
+                <button type="button" class="text-btn" id="emptyManual">手动添加</button>
+                <button type="button" class="text-btn" id="emptyImport">导入备份</button>
+              </div>
+              <button type="button" class="text-btn" id="emptyClearFilters" hidden>清除筛选</button>
+            </div>
+          </section>
+
+          <section class="workspace-view" id="sourceView" hidden aria-labelledby="sourcePageTitle">
+            <div class="workspace-head"><h1 id="sourcePageTitle">数据源</h1><div class="workspace-actions"><span id="sourceSaveState" class="data-footnote" role="status" hidden></span><button id="retrySourceSettings" class="text-btn" hidden>重试保存</button><button class="text-btn" id="refreshSources">全部测试</button></div></div>
+            <div class="source-connection-state" id="sourceConnectionState" role="status" hidden></div>
+            <div class="source-list source-page-list" id="sourceStatusList" aria-live="polite"></div>
+          </section>
+
+          <section class="workspace-view" id="toolsView" hidden aria-labelledby="toolsPageTitle">
+            <div class="workspace-head"><h1 id="toolsPageTitle">工具</h1><button type="button" class="text-btn" id="toolsHomeBack" data-tools-home hidden>工具首页</button></div>
+            <section class="tool-home" id="toolHome" aria-label="工具首页">
+              <div class="tool-portal">
+                <nav class="tool-map" aria-label="工具入口">
+                  <svg class="tool-map-lines" viewBox="0 0 640 470" preserveAspectRatio="none" aria-hidden="true"><path d="M320 235 C238 206 198 136 128 108"/><path d="M320 235 C405 194 462 124 530 103"/><path d="M320 235 C405 276 456 352 532 370"/><path d="M320 235 C234 280 202 350 118 373"/></svg>
+                  <div class="tool-map-core" aria-hidden="true"><span></span><img src="/fandu.png" alt="" /></div>
+                  <button type="button" class="tool-node node-timeline" data-tool-hub="timeline"><span class="tool-node-mark" aria-hidden="true"></span><b>时间轴</b><small id="toolTimelineMeta">按首播展开</small></button>
+                  <button type="button" class="tool-node node-catalog" data-tool-hub="catalog"><span class="tool-node-mark" aria-hidden="true"></span><b>目录</b><small id="toolCatalogMeta">多维筛选</small></button>
+                  <button type="button" class="tool-node node-season" data-tool-hub="season"><span class="tool-node-mark" aria-hidden="true"></span><b>季度查询</b><small id="toolSeasonMeta">全网新番</small></button>
+                  <button type="button" class="tool-node node-maintenance" data-tool-hub="maintenance"><span class="tool-node-mark" aria-hidden="true"></span><b>整理</b><small id="toolMaintenanceMeta">资料检查</small></button>
+                </nav>
+              </div>
+              <span class="sr-only" id="toolHubState" aria-live="polite"></span>
+            </section>
+            <nav class="tools-tabs" id="toolsTabs" role="tablist" aria-label="工具分区" hidden><button id="toolTabTimeline" role="tab" aria-selected="true" aria-controls="toolTimeline" data-tool-tab="timeline">时间轴</button><button id="toolTabCatalog" role="tab" aria-selected="false" aria-controls="toolCatalog" data-tool-tab="catalog" tabindex="-1">目录</button><button id="toolTabSeason" role="tab" aria-selected="false" aria-controls="toolSeason" data-tool-tab="season" tabindex="-1">季度查询</button><button id="toolTabMaintenance" role="tab" aria-selected="false" aria-controls="toolMaintenance" data-tool-tab="maintenance" tabindex="-1">整理</button></nav>
+            <section class="tool-panel" id="toolTimeline" data-tool-panel="timeline" hidden></section>
+            <section class="tool-panel" id="toolCatalog" data-tool-panel="catalog" hidden></section>
+            <section class="tool-panel" id="toolSeason" data-tool-panel="season" hidden></section>
+            <section class="tool-panel" id="toolMaintenance" data-tool-panel="maintenance" hidden>
+              <div class="maintenance-head"><div><h3>资料体检</h3><span id="auditScope">本地档案</span></div><button type="button" class="text-btn" id="runDataAudit">重新检查</button></div>
+              <div id="toolsReport" class="tools-report" aria-live="polite"></div>
+            </section>
+          </section>
+
+        </div>
+      </main>
+    </div>
+
+    <div class="workspace-view search-workspace" id="searchView" hidden>
+      <div class="workspace-head"><h1 id="searchTitle">搜索</h1></div>
+      <section class="search-panel" aria-labelledby="searchTitle">
+        <div class="search-toolbar">
+          <div class="search-input-wrap"><span aria-hidden="true">⌕</span><input id="searchInput" aria-label="搜索作品" maxlength="100" autocomplete="off" placeholder="输入作品名称，穿过次元壁" /><button class="search-clear" id="clearSearch" type="button" aria-label="清空搜索" hidden>×</button></div><button class="primary-btn" id="quickAdd" type="button">添加作品</button>
+        </div>
+        <section id="searchSeasonPreview" class="search-season-preview" aria-labelledby="searchSeasonTitle"></section>
+        <div class="search-results" id="searchResults" role="region" aria-label="搜索结果" aria-live="polite" aria-busy="false"></div>
+      </section>
+    </div>
+
+    <div class="drawer-backdrop" id="detailBackdrop" hidden></div>
+    <aside class="detail-drawer" id="detailDrawer" role="dialog" aria-modal="true" aria-label="作品详情" aria-hidden="true" inert>
+      <button class="drawer-close" id="closeDrawer" aria-label="关闭详情">×</button>
+      <div class="notice-slot" id="detailNoticeSlot"></div>
+      <div id="drawerContent"></div>
+    </aside>
+
+    <div class="dialog-backdrop" id="entryDialog" hidden>
+      <form class="entry-panel" id="entryForm" role="dialog" aria-modal="true" aria-labelledby="entryTitle" novalidate>
+        <div class="form-head"><h2 id="entryTitle">添加作品</h2><span id="entrySaveState" role="status" class="data-footnote" hidden>已保存</span><button type="button" id="retryEntrySave" class="text-btn" hidden>重试</button><button type="button" class="close-btn" data-close="entryDialog" aria-label="关闭编辑">×</button></div>
+        <div class="notice-slot"></div>
+        <div class="form-grid">
+          <label class="wide entry-title-field"><span class="sr-only">作品名称</span><input name="title" required maxlength="120" placeholder="作品名称，例如：迷宫饭" /></label>
+          <div class="entry-quick-row wide"><div class="choice-setting entry-choice"><span>类型</span><div class="choice-pills" data-choice-for="entryType" role="radiogroup" aria-label="类型"><button type="button" class="choice-pill" data-choice="anime" role="radio">动画</button><button type="button" class="choice-pill" data-choice="movie" role="radio">电影</button><button type="button" class="choice-pill" data-choice="tv" role="radio">剧集</button></div><select name="type" id="entryType" class="choice-native" aria-hidden="true" tabindex="-1"><option value="anime">动画</option><option value="movie">电影</option><option value="tv">剧集</option></select></div>
+          <select name="status" id="entryStatus" class="choice-native" aria-hidden="true" tabindex="-1" hidden><option value="planned">想看</option><option value="watching">在看</option><option value="completed">看过</option><option value="paused">搁置</option></select>
+          <label>总集数<input name="total" type="number" min="1" max="9999" placeholder="未知可留空" /></label>
+          <label>已看集数<input name="progress" type="number" min="0" max="9999" value="0" /></label></div>
+          <div class="wide cover-field">
+            <label><span class="field-label">封面</span><input id="customCoverInput" name="customCover" type="url" maxlength="2048" placeholder="封面图片链接（可选）" aria-describedby="coverHelp coverFeedback" /></label>
+            <div class="cover-actions"><button type="button" class="text-btn" id="checkCover">检测链接</button><button type="button" class="text-btn" id="resetCover">使用来源封面</button></div>
+            <p id="coverHelp" class="data-footnote">公开 HTTPS 图片链接 · JPG / PNG / WebP · 2 MB 以内</p>
+            <p id="coverFeedback" class="data-footnote" role="status"></p>
+          </div>
+          <label class="entry-text-field"><span class="field-label">作品背景</span><textarea name="description" maxlength="1200" placeholder="作品背景 / 简介（可选）"></textarea></label>
+          <label class="entry-text-field"><span class="field-label">笔记</span><textarea name="note" maxlength="4000" placeholder="想记下什么？（可选）"></textarea></label>
+          <fieldset class="wide list-membership"><legend>列表</legend><div id="listMembership"></div></fieldset>
+          <div class="wide series-editor-field"><label for="entrySeriesQuery">所属系列</label><div class="series-picker"><input id="entrySeriesQuery" type="search" maxlength="40" placeholder="不属于系列" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="entrySeriesSuggestions" aria-expanded="false" /><input name="seriesId" id="entrySeries" type="hidden" /><button type="button" class="series-picker-clear" id="clearEntrySeries" aria-label="清除所属系列" hidden>×</button><div class="series-picker-options" id="entrySeriesSuggestions" role="listbox" hidden></div></div></div>
+          <details class="extra-fields wide"><summary>首播、地区与标签</summary><div class="form-grid">
+            <label>首播年份<input name="year" type="number" min="1888" max="2100" placeholder="可留空" /></label>
+            <div class="choice-setting entry-choice"><span>首播季度</span><div class="choice-pills" data-choice-for="entrySeason" role="radiogroup" aria-label="首播季度"><button type="button" class="choice-pill" data-choice="" role="radio">未知</button><button type="button" class="choice-pill" data-choice="冬" role="radio">冬</button><button type="button" class="choice-pill" data-choice="春" role="radio">春</button><button type="button" class="choice-pill" data-choice="夏" role="radio">夏</button><button type="button" class="choice-pill" data-choice="秋" role="radio">秋</button></div><select name="season" id="entrySeason" class="choice-native" aria-hidden="true" tabindex="-1"><option value="">未知</option><option>冬</option><option>春</option><option>夏</option><option>秋</option></select></div>
+            <div class="choice-setting entry-choice"><span>地区</span><div class="choice-pills" data-choice-for="entryRegion" role="radiogroup" aria-label="地区"><button type="button" class="choice-pill" data-choice="" role="radio">未知</button><button type="button" class="choice-pill" data-choice="日本" role="radio">日本</button><button type="button" class="choice-pill" data-choice="中国" role="radio">中国</button><button type="button" class="choice-pill" data-choice="美国" role="radio">美国</button><button type="button" class="choice-pill" data-choice="英国" role="radio">英国</button><button type="button" class="choice-pill" data-choice="韩国" role="radio">韩国</button><button type="button" class="choice-pill" data-choice="其他" role="radio">其他</button></div><select name="region" id="entryRegion" class="choice-native" aria-hidden="true" tabindex="-1"><option value="">未知</option><option>日本</option><option>中国</option><option>美国</option><option>英国</option><option>韩国</option><option>其他</option></select></div>
+            <label class="wide">原名 / 英文名<input name="originalTitle" maxlength="160" /></label>
+            <label class="wide">搜索别名<input name="aliases" maxlength="1000" placeholder="用逗号分隔，也可加入拼音、简称" /></label>
+            <div class="wide tag-editor-field"><span class="field-label">标签</span><div class="entry-tag-picker" id="entryTagPicker" role="group" aria-label="作品标签"><div class="entry-tag-chips" id="entryTagChips"></div><input id="entryTagInput" type="text" maxlength="40" placeholder="输入后按 Enter 添加" autocomplete="off" aria-label="添加作品标签" /></div><div class="tag-suggestions" id="entryTagSuggestions" hidden></div><input type="hidden" name="tags" id="entryTagsValue" /></div>
+          </div></details>
+        </div>
+        <div class="entry-footer" id="entryFooter">
+          <p id="entryAddState" class="entry-add-state" role="status" tabindex="-1" hidden></p>
+          <button type="button" id="forkEntryDraft" class="text-btn" hidden>保留为另一份草稿</button>
+          <div class="entry-discard" id="entryDiscard" role="group" aria-labelledby="entryDiscardTitle" aria-describedby="entryDiscardHelp" hidden><div><strong id="entryDiscardTitle">放弃这次添加？</strong><p id="entryDiscardHelp">尚未添加到收藏，已输入的内容将被清除。</p></div><div class="entry-discard-actions"><button type="button" id="keepEntry" class="text-btn">继续填写</button><button type="button" id="discardEntry" class="text-btn danger">放弃添加</button></div></div>
+          <div class="form-actions" id="entryAddActions"><button type="button" id="cancelEntry" class="text-btn" data-close="entryDialog">取消</button><button id="createEntry" class="primary-btn" type="submit">添加作品</button></div>
+        </div>
+      </form>
+    </div>
+
+    <div class="dialog-backdrop" id="dataDialog" hidden>
+      <section class="data-panel settings-modal" role="dialog" aria-modal="true" aria-labelledby="dataTitle">
+        <div class="form-head"><h2 id="dataTitle">设置</h2><button class="close-btn" data-close="dataDialog">×</button></div>
+        <div class="notice-slot"></div>
+        <div class="settings-tabs" role="tablist" aria-label="设置分区">
+          <button role="tab" aria-selected="true" aria-controls="settingsGeneral" data-settings-tab="general">外观</button><button role="tab" aria-selected="false" aria-controls="settingsList" data-settings-tab="list">列表</button>
+          <button role="tab" aria-selected="false" aria-controls="settingsTags" data-settings-tab="tags">标签</button>
+          <button role="tab" aria-selected="false" aria-controls="settingsSeries" data-settings-tab="series">系列</button>
+          
+          <button role="tab" aria-selected="false" aria-controls="settingsData" data-settings-tab="data">备份</button>
+          <button role="tab" aria-selected="false" aria-controls="settingsAbout" data-settings-tab="about">关于</button>
+        </div>
+        <div class="settings-tabpanel" id="settingsList" role="tabpanel" data-settings-panel="list">
+          <div class="settings-intro settings-intro-split"><h3>列表</h3><span id="listSummary" role="status"></span></div>
+          <div id="listManager" class="manager-list"></div>
+          <div class="manager-add"><input id="newListName" maxlength="30" placeholder="新列表名称" /><button class="primary-btn" id="addList">添加列表</button></div>
+        </div>
+        <div class="settings-tabpanel" id="settingsTags" role="tabpanel" data-settings-panel="tags" hidden>
+          <div class="settings-intro"><h3>标签</h3></div>
+          <div class="tag-manager-toolbar"><div class="manager-add tag-create"><input id="newTagName" maxlength="40" placeholder="新建标签" /><button class="primary-btn" id="addTag">创建标签</button></div><label class="tag-search"><span aria-hidden="true">⌕</span><input id="tagSearch" type="search" maxlength="40" placeholder="筛选标签" aria-label="筛选标签" /></label></div>
+          <div class="tag-manager-summary" id="tagSummary" role="status"></div>
+          <div id="tagManager" class="tag-manager-grid"></div>
+        </div>
+        <div class="settings-tabpanel" id="settingsSeries" role="tabpanel" data-settings-panel="series" hidden>
+          <div class="settings-intro"><h3>系列</h3></div>
+          <div class="tag-manager-toolbar series-manager-toolbar"><div class="manager-add"><input id="newSeriesName" maxlength="40" placeholder="例如：攻壳机动队" /><button class="primary-btn" id="addSeries">创建系列</button></div><label class="tag-search"><span aria-hidden="true">⌕</span><input id="seriesSearch" type="search" maxlength="40" placeholder="筛选系列" aria-label="筛选系列" /></label></div>
+          <div class="tag-manager-summary" id="seriesSummary" role="status"></div>
+          <div id="seriesManager" class="manager-list series-manager-grid"></div>
+        </div>
+        <div class="settings-tabpanel" id="settingsGeneral" role="tabpanel" data-settings-panel="general" hidden>
+          <div class="settings-intro"><h3>显示与主题</h3></div>
+          <div class="settings-subsection settings-layout-section">
+            <div class="settings-section-head"><h4>画布</h4><span>收藏页</span></div>
+            <div class="layout-fields">
+              <div class="choice-setting canvas-choice"><span>每行列数</span><div class="choice-pills canvas-pills" data-choice-for="layoutColumns" role="radiogroup" aria-label="每行列数"><button type="button" class="choice-pill" data-choice="0" role="radio">自动</button><button type="button" class="choice-pill" data-choice="4" role="radio">4</button><button type="button" class="choice-pill" data-choice="5" role="radio">5</button><button type="button" class="choice-pill" data-choice="6" role="radio">6</button><button type="button" class="choice-pill" data-choice="7" role="radio">7</button><button type="button" class="choice-pill" data-choice="8" role="radio">8</button><button type="button" class="choice-pill" data-choice="9" role="radio">9</button><button type="button" class="choice-pill" data-choice="10" role="radio">10</button></div><select id="layoutColumns" class="choice-native" aria-hidden="true" tabindex="-1"><option value="0">自动</option><option value="4">4 列</option><option value="5">5 列</option><option value="6">6 列</option><option value="7">7 列</option><option value="8">8 列</option><option value="9">9 列</option><option value="10">10 列</option></select></div>
+              <div class="choice-setting canvas-choice"><span>每页行数</span><div class="choice-pills canvas-pills" data-choice-for="layoutRows" role="radiogroup" aria-label="每页行数"><button type="button" class="choice-pill" data-choice="0" role="radio">连续</button><button type="button" class="choice-pill" data-choice="1" role="radio">1</button><button type="button" class="choice-pill" data-choice="2" role="radio">2</button><button type="button" class="choice-pill" data-choice="3" role="radio">3</button><button type="button" class="choice-pill" data-choice="4" role="radio">4</button><button type="button" class="choice-pill" data-choice="5" role="radio">5</button><button type="button" class="choice-pill" data-choice="6" role="radio">6</button></div><select id="layoutRows" class="choice-native" aria-hidden="true" tabindex="-1"><option value="0">连续滚动</option><option value="1">1 行</option><option value="2">2 行</option><option value="3">3 行</option><option value="4">4 行</option><option value="5">5 行</option><option value="6">6 行</option></select></div>
+            </div>
+          </div>
+          <div class="settings-subsection">
+            <h4>浏览页显示</h4>
+            <div class="check-grid"><label><input type="checkbox" id="showType" />类型</label><label><input type="checkbox" id="showRating" />来源评分</label><label><input type="checkbox" id="showCount" />列表数量</label></div>
+            <div class="choice-setting"><span>首播时间</span><div class="choice-pills" data-choice-for="timeDisplay" role="radiogroup" aria-label="首播时间显示"><button type="button" class="choice-pill" data-choice="hidden" role="radio">不显示</button><button type="button" class="choice-pill" data-choice="none" role="radio">年份</button><button type="button" class="choice-pill" data-choice="date" role="radio">日期</button><button type="button" class="choice-pill" data-choice="relative" role="radio">相对时间</button></div><select id="timeDisplay" class="choice-native" aria-hidden="true" tabindex="-1"><option value="hidden">不显示</option><option value="none">显示年份</option><option value="date">显示首播日期</option><option value="relative">显示相对首播</option></select></div>
+          </div>
+          <div class="settings-subsection settings-theme-section">
+            <div class="settings-section-head"><h4>主题</h4><button type="button" id="modeToggle" class="mode-toggle" aria-pressed="true" aria-label="切换到白天模式"><span id="modeToggleIcon" aria-hidden="true">☾</span><span id="modeToggleLabel">夜间</span></button><select id="modeSelect" class="choice-native" aria-hidden="true" tabindex="-1"><option value="dark">夜间</option><option value="light">白天</option></select></div>
+            <div class="theme-palette" data-choice-for="themeSelect" role="radiogroup" aria-label="配色方案"><button type="button" class="theme-swatch theme-blue" data-choice="blue" role="radio"><i aria-hidden="true"></i><span>极夜蓝</span></button><button type="button" class="theme-swatch theme-violet" data-choice="violet" role="radio"><i aria-hidden="true"></i><span>霓虹紫</span></button><button type="button" class="theme-swatch theme-cyan" data-choice="cyan" role="radio"><i aria-hidden="true"></i><span>赛博青</span></button><button type="button" class="theme-swatch theme-amber" data-choice="amber" role="radio"><i aria-hidden="true"></i><span>琥珀黑</span></button><button type="button" class="theme-swatch theme-graphite" data-choice="graphite" role="radio"><i aria-hidden="true"></i><span>石墨灰</span></button></div><select id="themeSelect" class="choice-native" aria-hidden="true" tabindex="-1"><option value="blue">极夜蓝</option><option value="violet">霓虹紫</option><option value="cyan">赛博青</option><option value="amber">琥珀黑</option><option value="graphite">石墨灰</option></select>
+            <div class="accent-picker"><label for="accentColor">自定义强调色</label><input id="accentColor" type="color" value="#83aaff" /><button id="resetAccent" class="text-btn" type="button">恢复默认</button></div>
+          </div>
+          <div class="autosave-status"><span id="generalSaveState" role="status" hidden></span><button id="retrySettings" class="text-btn" hidden>重试</button></div>
+        </div>
+        <div class="settings-tabpanel" id="settingsData" role="tabpanel" data-settings-panel="data" hidden>
+          <div class="settings-intro"><h3>备份与迁移</h3></div>
+          <section id="migrationRecovery" class="migration-recovery" aria-labelledby="migrationRecoveryTitle" hidden><div class="migration-recovery-heading"><h4 id="migrationRecoveryTitle">恢复记录需要处理</h4><button type="button" id="refreshMigrationRecovery" class="text-btn">重新检查</button><button type="button" id="closeStorageRecovery" class="text-btn" hidden>收起检查</button></div><p id="migrationRecoveryState" role="status" tabindex="-1"></p><div id="migrationRecoveryRecords"></div><div class="migration-recovery-actions"><button type="button" id="exportMigrationDiagnostic" class="text-btn">导出诊断副本</button><button type="button" id="retryMigrationRecovery" class="primary-btn" hidden>继续恢复</button><button type="button" id="openMigrationFolder" class="text-btn">打开数据目录</button></div></section>
+          <div class="backup-layout">
+            <section class="backup-section backup-file-section" aria-labelledby="backupFileTitle">
+              <div class="backup-section-head"><h4 id="backupFileTitle">备份文件</h4><span id="storageStats"></span></div>
+              <p class="backup-file-note">换电脑时使用完整迁移包；仅导出资料会生成更小的文件，不包含离线封面。</p>
+              <div class="backup-file-actions"><button class="primary-btn" id="exportTransfer">导出完整迁移包</button><button id="exportData">仅导出资料</button><label class="import-label">导入文件<input id="importData" type="file" accept="application/json,.json" /></label></div>
+              <p id="fileTransferState" class="data-footnote" role="status" tabindex="-1" hidden></p>
+              <div class="backup-import-review" id="importReview" hidden>
+                <div class="backup-import-file"><span id="importFileName"></span><button type="button" id="cancelImport" aria-label="取消导入">×</button></div>
+                <div class="backup-import-options" id="importOptions" hidden><span>导入方式</span><div class="choice-pills" data-choice-for="importMode" role="radiogroup" aria-label="导入方式"><button type="button" class="choice-pill" data-choice="merge" role="radio">合并</button><button type="button" class="choice-pill" data-choice="replace" role="radio">完整恢复</button></div><select id="importMode" class="choice-native" aria-hidden="true" tabindex="-1"><option value="merge">合并导入</option><option value="replace">完整恢复</option></select><label class="checkbox-label"><input id="importLayout" type="checkbox" />恢复设置</label></div>
+                <p id="importPreview" class="data-footnote" role="status"></p><p id="importState" class="backup-import-state" role="status" tabindex="-1" hidden></p><button class="primary-btn" id="importConfirm" aria-describedby="importPreview importState" hidden>确认合并</button>
+              </div>
+            </section>
+            <section class="backup-section backup-snapshot-section" aria-labelledby="localBackupTitle">
+              <div class="backup-heading"><div class="backup-title-line"><h4 id="localBackupTitle">本地快照</h4><span id="snapshotSummary"></span></div><div class="backup-heading-actions"><button class="primary-btn" id="createSnapshot">创建快照</button><button class="text-btn backup-refresh" id="refreshBackups" aria-label="刷新快照" title="刷新快照">↻</button></div></div>
+              <p id="backupState" class="data-footnote" role="status" tabindex="-1"></p>
+              <div id="backupList" class="backup-list"></div>
+            </section>
+            <section class="backup-section backup-cover-section" aria-labelledby="coverTransferTitle">
+              <div class="backup-heading"><div class="backup-title-line"><h4 id="coverTransferTitle">封面缓存</h4><span id="coverCacheStats"></span></div><div class="backup-heading-actions"><button class="text-btn" id="pruneCovers">清理无用</button></div></div>
+              <div class="data-actions"><button id="exportCovers">导出封面</button><label class="import-label">导入封面<input id="importCovers" type="file" accept="application/json,.json" /></label></div>
+              <p id="coverTransferState" class="data-footnote" role="status" tabindex="-1"></p>
+            </section>
+          </div>
+        </div>
+        <div class="settings-tabpanel" id="settingsAbout" role="tabpanel" data-settings-panel="about" hidden>
+          <section class="about-hero" aria-labelledby="aboutProductName"><div class="about-logo"><img src="/fandu.png" alt="" /></div><div class="about-copy"><span>Fandu</span><h3 id="aboutProductName">番渡</h3><p>下一站，异世界。</p></div><div class="about-version"><span id="aboutEdition">本地版</span><strong>v<output id="aboutVersion">—</output></strong></div></section>
+          <section class="about-data-card" aria-labelledby="aboutDataTitle"><span class="about-folder-icon" aria-hidden="true"></span><div><h4 id="aboutDataTitle">数据目录</h4><code id="aboutDataPath">正在读取…</code></div><button type="button" class="text-btn" id="openDataFolder">打开数据目录</button></section>
+        </div>
+      </section>
+    </div>
+
+    <div id="toastHome"><div class="toast-region" id="toasts" role="region" aria-label="操作提示"></div><section id="editRecoveryRepair" class="recovery-repair" aria-labelledby="editRecoveryRepairTitle" hidden><div class="recovery-repair-heading"><h3 id="editRecoveryRepairTitle">检查未完成记录</h3><button type="button" id="closeEditRecoveryRepair" class="text-btn" aria-label="关闭恢复记录检查">关闭</button></div><p id="editRecoveryRepairState" role="status">检查只读取本机的未完成记录，不修改作品档案。</p><div id="editRecoveryRepairList"></div><div class="recovery-repair-actions"><button type="button" id="exportEditRecovery" class="text-btn">导出恢复记录</button><button type="button" id="inspectEditRecovery" class="text-btn">重新检查</button><button type="button" id="discardBrokenEdits" class="text-btn danger" hidden>仅放弃损坏记录</button></div></section></div>
+    <div id="toastAnnouncements" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+    <script type="module" src="/src/app.js?v=0.3.3"></script>
+  </body>
+</html>

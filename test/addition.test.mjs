@@ -1,0 +1,103 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtemp,readFile,writeFile,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {randomUUID} from 'node:crypto';
+import {spawn} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+import {once} from 'node:events';
+import {makeServer} from '../server.mjs';
+import {CoverCache} from '../lib/cover-cache.mjs';
+import {MigrationCoordinator} from '../lib/migration.mjs';
+import {LibraryStore,MAX_ADD_RECEIPTS} from '../lib/store.mjs';
+import {entry} from '../src/model.js';
+import {resolveAddition} from '../src/addition.js';
+const draft=revision=>({requestId:randomUUID(),revision,entry:entry({id:randomUUID(),title:'星海记录',type:'anime',createdAt:new Date().toISOString()})});
+async function fixture(t){const dir=await mkdtemp(join(tmpdir(),'fandu-add-'));t.after(()=>rm(dir,{recursive:true,force:true}));return {dir,store:new LibraryStore(dir)};}
+test('atomic addition receipts survive restart, editing and deletion without recreation',async t=>{
+  const {dir,store}=await fixture(t),payload=draft(0);
+  const [a,b]=await Promise.all([store.addEntry(payload),store.addEntry(payload)]);
+  assert.equal(a.revision,1);assert.equal(b.replayed,true);assert.equal(b.library.entries.length,1);
+  assert.equal(Object.hasOwn(a.library,'addReceipts'),false);
+  const restarted=new LibraryStore(dir);
+  let library=await restarted.read();library.entries[0].note='后来修改';
+  await restarted.save({...library,addReceipts:[]});
+  assert.equal((await restarted.addEntry(payload)).library.entries[0].note,'后来修改');
+  library=await restarted.read();await restarted.save({...library,entries:[]});
+  const replay=await restarted.addEntry(payload);assert.equal(replay.library.entries.length,0);assert.equal(replay.library.revision,3);
+  assert.equal((await restarted.additionStatus(payload.requestId)).state,'completed');
+  assert.equal(JSON.parse(await readFile(join(dir,'library.json'),'utf8')).addReceipts.length,1);
+  await assert.rejects(restarted.addEntry({...payload,entry:{...payload.entry,title:'不同意图'}}),{status:409});
+});
+test('expired receipts and duplicate source IDs never reapply stale additions',async t=>{
+  const {store}=await fixture(t),first=draft(0);first.entry=entry({...first.entry,sourceId:'bangumi:123'});
+  await store.addEntry(first);
+  const duplicate=draft(1);duplicate.entry=entry({...duplicate.entry,sourceId:'bangumi:123'});
+  await assert.rejects(store.addEntry(duplicate),{status:409});
+  for(let revision=1;revision<=MAX_ADD_RECEIPTS;revision++)await store.addEntry(draft(revision));
+  assert.equal((await store.additionStatus(first.requestId)).state,'unknown');
+  await assert.rejects(store.addEntry(first),{status:409});
+  assert.equal((await store.read()).entries.length,MAX_ADD_RECEIPTS+1);
+});
+test('lost responses are confirmed and uncertain retries preserve the same payload',async()=>{
+  const payload=draft(0),result={state:'completed',requestId:payload.requestId,entryId:payload.entry.id,revision:1,library:{revision:1,entries:[payload.entry]}};
+  const send=async received=>{assert.equal(received,payload);throw Error('连接中断');};
+  assert.equal((await resolveAddition(payload,{send,confirm:async()=>result})).state,'completed');
+  assert.equal((await resolveAddition(payload,{send,confirm:async()=>({state:'unknown',requestId:payload.requestId})})).state,'pending');
+  const reject=async()=>{throw Object.assign(Error('版本冲突'),{status:409});};
+  assert.equal((await resolveAddition(payload,{send:reject,confirm:async()=>result})).state,'completed');
+  assert.equal((await resolveAddition(payload,{send:reject,confirm:async()=>({state:'unknown',requestId:payload.requestId})})).state,'rejected');
+  assert.equal((await resolveAddition(payload,{send,confirm:async()=>({...result,entryId:'其他作品'})})).state,'pending');
+  assert.equal((await resolveAddition(payload,{send,confirm:async()=>({...result,revision:2,library:{revision:2,entries:[payload.entry]}})})).state,'pending');
+  assert.equal((await resolveAddition(payload,{send,confirm:async()=>({...result,library:{revision:1,entries:[{}]}})})).state,'pending');
+});
+for(const fault of ['write','sync','rename','directory-sync','crash-before','crash-after'])test(`addition ${fault}: work and receipt remain consistent after restart`,async t=>{
+  const {dir,store}=await fixture(t),payload=draft(0);
+  await writeFile(join(dir,'add-request.json'),JSON.stringify(payload));
+  const result=await new Promise((resolve,reject)=>{
+    const worker=spawn(process.execPath,[fileURLToPath(new URL('../scripts/storage-fault-worker.mjs',import.meta.url)),dir,'add',fault],{stdio:['ignore','pipe','pipe']});
+    let stderr='';worker.stderr.on('data',chunk=>stderr+=chunk);
+    const timer=setTimeout(()=>{worker.kill('SIGKILL');reject(Error('Fault worker timed out'));},10000);
+    worker.once('error',error=>{clearTimeout(timer);reject(error);});worker.once('close',(code,signal)=>{clearTimeout(timer);resolve({code,signal,stderr});});
+  });
+  assert.equal(result.stderr,'');if(fault.startsWith('crash'))assert.equal(result.signal,'SIGKILL');else assert.equal(result.code,71);
+  const completed=['directory-sync','crash-after'].includes(fault);
+  assert.equal((await store.read()).entries.length,completed?1:0);
+  assert.equal((await store.additionStatus(payload.requestId)).state,completed?'completed':'unknown');
+  const retry=await store.addEntry(payload);assert.equal(retry.replayed,completed);assert.equal(retry.library.entries.length,1);assert.equal(retry.library.revision,1);
+});
+test('HTTP additions require same-origin protection and serialize duplicate requests',async t=>{
+  const {dir}=await fixture(t),server=makeServer({dataDir:dir});server.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>new Promise(resolve=>server.close(resolve)));
+  const base=`http://127.0.0.1:${server.address().port}`,headers={'X-Yingjian':'1','Content-Type':'application/json'},payload=draft(0);
+  assert.equal((await fetch(base+'/api/entries/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})).status,403);
+  assert.equal((await fetch(base+'/api/entries/add',{method:'POST',headers:{...headers,Origin:'https://example.com'},body:JSON.stringify(payload)})).status,403);
+  const results=await Promise.all(Array.from({length:3},async()=>{const response=await fetch(base+'/api/entries/add',{method:'POST',headers,body:JSON.stringify(payload)});assert.equal(response.status,200);return response.json();}));
+  assert.equal(results.filter(item=>!item.replayed).length,1);
+  const status=await(await fetch(base+'/api/entries/add-status?id='+payload.requestId,{headers})).json();assert.equal(status.state,'completed');assert.equal(status.library.entries.length,1);assert.equal(Object.hasOwn(status.library,'addReceipts'),false);
+  assert.equal((await fetch(base+'/api/entries/add-status?id=invalid',{headers})).status,400);
+});
+test('receipts coexist with interrupted import and snapshot restoration without false recovery',async t=>{
+  const {dir,store}=await fixture(t),payload=draft(0);await store.addEntry(payload);
+  const covers=new CoverCache(join(dir,'covers'));await covers.ready;
+  const initial=await store.read();let fail=true;
+  const coordinator=new MigrationCoordinator({dir,store,covers,onStage:async stage=>{if(stage==='archive'&&fail)throw Error('测试写入后中断');}});
+  const imported={requestId:randomUUID(),revision:initial.revision,entries:initial.entries.map(item=>({...item,note:'导入后的笔记'})),settings:initial.settings};
+  await assert.rejects(coordinator.import(imported),{status:503});fail=false;
+  const recovered=await coordinator.import(imported);assert.equal(recovered.library.entries[0].note,'导入后的笔记');assert.equal(recovered.library.revision,2);
+  assert.equal((await store.addEntry(payload)).library.entries[0].note,'导入后的笔记');
+  const catalog=await store.createSnapshot(),selected=catalog.backups.find(item=>item.kind==='manual');
+  const restored=await coordinator.restore({requestId:randomUUID(),id:selected.id,token:selected.token,currentToken:catalog.current.token});
+  assert.equal(restored.library.entries[0].note,'导入后的笔记');
+  assert.equal((await store.additionStatus(payload.requestId)).state,'unknown');
+  await assert.rejects(store.addEntry(payload),{status:409});assert.equal((await store.read()).entries.length,1);
+});
+test('malformed receipt metadata and non-string dates fail before overwriting an archive',async t=>{
+  const {dir,store}=await fixture(t),payload=draft(0);
+  await assert.rejects(store.addEntry({...payload,entry:{...payload.entry,updatedAt:2026}}),{status:400});
+  await store.addEntry(payload);
+  const path=join(dir,'library.json'),value=JSON.parse(await readFile(path,'utf8'));
+  value.addReceipts[0].revision=value.revision+1;const broken=JSON.stringify(value);await writeFile(path,broken);
+  await assert.rejects(store.read(),/无法读取/);await assert.rejects(store.addEntry(payload),/无法读取/);
+  assert.equal(await readFile(path,'utf8'),broken);
+});

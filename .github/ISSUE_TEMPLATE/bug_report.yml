@@ -1,0 +1,29 @@
+name: 问题反馈
+description: 报告可以复现的问题（请勿包含个人资料或安全漏洞细节）
+title: "[Bug] "
+body:
+  - type: input
+    id: version
+    attributes:
+      label: 应用版本
+      placeholder: v0.3.3
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: 系统、架构与运行方式
+      placeholder: macOS 13 / Apple Silicon / 桌面版，或 Windows 11 / x64 / 桌面版
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 复现步骤、预期与实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: 可选截图或日志
+      description: 请遮盖个人资料、用户名和路径，不要上传真实收藏库。
