@@ -25,8 +25,8 @@ A local-first anime and media tracker with a clean interface, customizable theme
 
 | 平台 | 系统要求 | 安装包 |
 | --- | --- | --- |
-| macOS · Apple Silicon | macOS 13 或更新版本 | `番渡-0.3.3-arm64.dmg`，或 ZIP 便携包 |
-| Windows · x64 / ARM64 | 64 位 Windows 10 或更新版本 | `番渡 Setup 0.3.3.exe`，同一安装器包含两种架构 |
+| macOS · Apple Silicon | macOS 13 或更新版本 | `Fandu-0.3.3-macOS-arm64.dmg`，或同名 ZIP 便携包 |
+| Windows · x64 / ARM64 | 64 位 Windows 10 或更新版本 | `Fandu-0.3.3-Windows-Setup.exe`，同一安装器包含两种架构 |
 
 macOS 打开 DMG 后，将番渡拖入“应用程序”；Windows 运行 EXE 并按安装向导操作。目前没有 Intel Mac 或 Linux 安装包。
 
